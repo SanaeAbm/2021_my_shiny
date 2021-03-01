@@ -18,16 +18,22 @@ ui <- fluidPage(
     # Application title
     titlePanel("This is a new shiny app"),
     includeMarkdown("references.md"),
-    selectInput("select", label = h3("Plot by type of alimentation"), 
-                choices = character(0),
-                selected = 1),
-    h3("plots"),
-    plotOutput(outputId = "plot")
+    sidebarLayout(
+        sidebarPanel(
+            selectInput("select", label = h3("Plot by type of alimentation"), 
+                        choices = character(0),
+                        selected = 1)
+        ),
+        mainPanel(
+            plotOutput(outputId = "plot")
+        )
     )
+)
 
 col_scale <- scale_colour_discrete(limits = list_choices)
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
+    
     updateSelectInput(session, "select",
                       choices = list_choices,
                       selected = tail(list_choices, 1)
