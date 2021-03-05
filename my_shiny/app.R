@@ -31,8 +31,15 @@ ui <- navbarPage("Shiny app",
         )
 ))),
 tabPanel("References",
-         includeMarkdown("references.md"))
-)
+         p(tags$button(class="btn btn-default", 
+                       `data-toggle`="collapse", 
+                       `data-target`="#collapseExample",
+                       "References")),
+         div(class="collapse", id="collapseExample",
+             div(class="card card-body",
+                 includeMarkdown("references.md")
+             ))
+))
 col_scale <- scale_colour_discrete(limits = list_choices)
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
@@ -50,6 +57,7 @@ server <- function(input, output, session) {
     
     
 }
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
