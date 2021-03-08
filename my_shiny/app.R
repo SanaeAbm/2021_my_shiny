@@ -54,9 +54,13 @@ tabPanel("Random generator",
                        ), # sidebarPanel
                        mainPanel(
                            #Create a div with nothing inside --> server side that creates the content
-                           plotOutput(outputId = "pulpo")
-                       ) # mainPanel
-         ) # sidebarLayout
+                           tabsetPanel(type = "tabs",
+                                       #tabPanel("Título pestaña", what to do)
+                                       tabPanel("Plot", plotOutput("histPlot")),#plot hist
+                                       tabPanel("Summary", verbatimTextOutput("histSummary")), #some text
+                                       tabPanel("Table", tableOutput("histTable")) #plot a table
+                           )
+                       ))
 
 ),
 tabPanel("References",
@@ -98,7 +102,16 @@ server <- function(input, output, session) {
     #paste/paste0--> combine things: rnorm(input) --> a string
     # You want to "eval" it --> obtaining 20 normal objects (rnorm(20))--> what you want to plot
     #Since cmd comes from a reactive values is not a value is a function
-    cmd = reactive(eval(parse(text=paste(input$dist,"(",input$n_sample,")",sep=""))));
+    #samples= reactive(eval(parse(text=paste(input$dist,"(",input$n_sample,")",sep=""))));
+    #Other way to do it: get distibutions and then the samples:
+    
+    samples <- reactive({
+        dist <- eval(parse(text=paste(input$dist)))
+        dist(input$n_sample)
+    })
+    
+    
+    
     
     #We need observe because the element "input$ato_bins" is a function: changes with user interaction
     #Observe is a reactive function that can get value that input gives to it
@@ -110,11 +123,17 @@ server <- function(input, output, session) {
     
     #If the botton is pressed: plots hist w/out bins
     #Otherwise, if clicked, give number of bins:
-    output$pulpo <- renderPlot(
-        if(input$auto_bins) hist(cmd()) 
-        else hist(cmd(), breaks=input$n_bins)
+    output$histPlot<- renderPlot(
+        #if(input$auto_bins) hist(samples()) 
+        #else hist(cmd(), breaks=input$n_bins)
+        hist(samples(), main="Random Generation",
+             #If there is auto a use struges and if not  I use bins
+        breaks = if(!input$auto_bins) {input$n_bins} else {"Sturges"})
     );
+    output$histSummary <- renderPrint(summary(samples()))
+    output$histTable <- renderTable(samples())
 }
+
 
 
 # Run the application 
