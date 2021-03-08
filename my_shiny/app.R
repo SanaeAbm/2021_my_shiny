@@ -110,7 +110,10 @@ server <- function(input, output, session) {
         nearPoints(msleep 
                    #What info do you want to know:
                    %>% select(name, bodywt,  sleep_total, sleep_rem, sleep_cycle ), 
-                   input$plot_click, threshold = 10, maxpoints = 1, #pass clikc info
+                   input$plot_click, 
+                   threshold = 10, #How lose you should be to the point
+                   maxpoints = 1,#How many result you want to get
+                   #pass clikc info
                    addDist = TRUE)
         
     )
