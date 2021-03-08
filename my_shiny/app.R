@@ -29,7 +29,10 @@ ui <- navbarPage("Shiny app",
                         selected = 1)
         ),
         mainPanel(
-            plotOutput(outputId = "plot")
+            #plot_click: reactie botton
+            plotOutput(outputId = "plot", click = "plot_click"),
+            #Instead of verbatim
+            tableOutput("info")
         )
 ))),
 tabPanel("Random generator",
@@ -96,13 +99,31 @@ server <- function(input, output, session) {
             col_scale+
             geom_point() + facet_wrap(~ vore, nrow = 2)
     })
+    #add info below graph
+    output$info<- output$info <- renderTable( #render table not text because input is table
+        #Coordinates of our click:
+        #paste0("x=", input$plot_click$x, "\ny=", input$plot_click$y)
+        #All info available when clicking:
+        #toString(input$plot_click)
+        #Be more efficient:
+        #Function: nearPoints: looks for the nearest point to your click
+        nearPoints(msleep 
+                   #What info do you want to know:
+                   %>% select(name, bodywt,  sleep_total, sleep_rem, sleep_cycle ), 
+                   input$plot_click, threshold = 10, maxpoints = 1, #pass clikc info
+                   addDist = TRUE)
+        
+    )
+    
+    
+    
     #comand that generates the sample
     #reactive: input changes, when sample changes
     #Takes the input distribution
     #paste/paste0--> combine things: rnorm(input) --> a string
     # You want to "eval" it --> obtaining 20 normal objects (rnorm(20))--> what you want to plot
     #Since cmd comes from a reactive values is not a value is a function
-    #samples= reactive(eval(parse(text=paste(input$dist,"(",input$n_sample,")",sep=""))));
+    #cmd= reactive(eval(parse(text=paste(input$dist,"(",input$n_sample,")",sep=""))));
     #Other way to do it: get distibutions and then the samples:
     
     samples <- reactive({
