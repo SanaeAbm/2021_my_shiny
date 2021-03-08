@@ -45,6 +45,8 @@ tabPanel("Random generator",
                            #Slider: que se deliza paa elegir la opción 
                            sliderInput("n_sample", label = h3("Number of samples"), 
                                        min = 10, max = 100, value = 50), #max and minm value del slider; value="50" ( es el current value, valor inicial)
+                           #When you have a time consuming algorithm: and you dont want the algorithm to be recumputed eerytime the user moves something
+                                       actionButton("goButton", "Go!"), #Go button, when we click we get the hist; when we hit it eveything starts again
                            fluidRow( #page that is 12 columns
                                h3(style = "margin-left: 20px; margin-bottom: 0px;", "Number of bins"),
                                column(2,#columns to do:
@@ -53,7 +55,9 @@ tabPanel("Random generator",
                                column(10,#10 columns to do:
                                       sliderInput("n_bins", label="", min = 1, max = 50, value = 30)
                                )
-                           )
+                           ),
+                           #Add downliad botton:
+                           downloadButton("report", "Generate report")
                        ), # sidebarPanel
                        mainPanel(
                            #Create a div with nothing inside --> server side that creates the content
@@ -114,7 +118,8 @@ server <- function(input, output, session) {
                    threshold = 10, #How lose you should be to the point
                    maxpoints = 1,#How many result you want to get
                    #pass clikc info
-                   addDist = TRUE)
+             
+                         addDist = TRUE)
         
     )
     
@@ -128,10 +133,16 @@ server <- function(input, output, session) {
     #Since cmd comes from a reactive values is not a value is a function
     #cmd= reactive(eval(parse(text=paste(input$dist,"(",input$n_sample,")",sep=""))));
     #Other way to do it: get distibutions and then the samples:
-    
+    #Reactive: when every the input changes the sampel is recumpted
     samples <- reactive({
+        #Add go botton: 
+        input$goButton;
+        #Input distribution is reactive
         dist <- eval(parse(text=paste(input$dist)))
-        dist(input$n_sample)
+        #isolated: not reactive with respect to number of smples
+        dist(isolate(input$n_sample))
+        
+        
     })
     
     
@@ -156,7 +167,40 @@ server <- function(input, output, session) {
     );
     output$histSummary <- renderPrint(summary(samples()))
     output$histTable <- renderTable(samples())
+    #report: ID of the download button
+    output$report <- downloadHandler(
+        # For PDF output, change this to "report.pdf"
+        filename = "report.html",
+        #Content of the file that you are going to download:
+        content = function(file) {
+            # Copy the report file to a temporary directory before processing it, in
+            # case we don't have write permissions to the current working dir (which
+            # can happen when deployed).
+            # Give new name to our file:
+            tempReport <- file.path(tempdir(), "report.Rmd")
+            file.copy("report.Rmd", tempReport, overwrite = TRUE)
+            
+            # Set up parameters to pass to Rmd document
+            params <- list(
+                #All isolated: dont want to generate a report everytime the user is clicking: only when the donwload botton is clicked
+                n_sample = isolate(input$n_sample), 
+                dist = isolate(input$dist), 
+                breaks = if(!isolate(input$auto_bins)) {isolate(input$n_bins)} else {"Sturges"}
+            )
+            
+            # Knit the document, passing in the `params` list, and eval it in a
+            # child of the global environment (this isolates the code in the document
+            # from the code in this app).
+            rmarkdown::render(tempReport, output_file = file,
+                              params = params,
+                              envir = new.env(parent = globalenv())
+            )
+        }
+    
+    )
+
 }
+
 
 
 

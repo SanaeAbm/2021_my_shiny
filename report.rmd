@@ -1,0 +1,27 @@
+---
+title: "report"
+author: "Sanae"
+date: "6/3/2019"
+output: html_document
+params: 
+  n_sample: 100
+  dist: 'rnorm'
+  breaks: 7
+---
+```{r include=FALSE}
+  dist <- eval(parse(text=paste(params$dist)))
+```
+
+```{r}
+# The `params` object is available in the document.
+params$n_sample
+```
+
+A histogram of `r params$n_sample` random points with `r params$dist` distribution
+
+<pre class="r"><code class="hljs">hist(`r params$dist`(`r params$n_sample`), breaks=<span class="hljs-string">"`r params$breaks`"</span>, main=<span class="hljs-string">"Random Generation"</span>)</code></pre>
+
+```{r echo=FALSE}
+xname <- paste(params$dist,"(",params$n_sample,")",sep='')
+hist(dist(params$n_sample), breaks=params$breaks, main="Random Generation", xlab = xname )
+```
